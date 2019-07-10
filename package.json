@@ -1,0 +1,16 @@
+{
+  "name": "qi-re",
+  "version": "0.1.0",
+  "description": "qidian international (webnovel) RE stuff",
+  "main": "index.js",
+  "author": "kuwoyuki <kuwoyuki@cock.li>",
+  "license": "MIT",
+  "dependencies": {
+    "got": "^9.6.0",
+    "node-rsa": "^1.0.5",
+    "tough-cookie": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1"
+  }
+}
