@@ -1,10 +1,7 @@
 /* global BigInt */
-const login = require("./src/methods/login");
-// const ping = require("./src/methods/ping");
-// const tasks = require("./src/methods/tasks");
-// const { AuthError } = require("./src/errors");
-const { Cookie, CookieJar } = require("tough-cookie");
 const UUID = require("./src/helpers/uuid");
+const login = require("./src/methods/login");
+const { CookieJar } = require("tough-cookie");
 const user = require("./src/methods/user");
 const setCookies = require("./src/helpers/loginResponse");
 const readline = require("readline-promise").default;
@@ -17,9 +14,8 @@ const rlp = readline.createInterface({
 
 /**
  * Login into webnovel
- *
- * @param {*} { credentials, token, cookieJar }
- * @returns {Array<Cookie>}
+ * @param {*} { uuid, credentials, cookieJar }
+ * @returns {void}
  */
 async function userLogin({ uuid, credentials, cookieJar }) {
   const {
@@ -27,69 +23,90 @@ async function userLogin({ uuid, credentials, cookieJar }) {
   } = await login.android({ uuid, ...credentials }, cookieJar);
 
   // validate login
-  const status = await login.validate({
+  await login.validate({
     uuid,
     userId: userid,
     userKey: ukey,
     ticket
   });
 
-  // TODO: rm
-  console.log(status);
-
   setCookies({ userid, ukey }, cookieJar);
-  // return [
-  //   new Cookie({ key: "ywkey", value: ukey }),
-  //   new Cookie({ key: "ywguid", value: userid }),
-  //   new Cookie({ key: "webnovel-language", value: "en" }),
-  //   new Cookie({ key: "webnovel-content-language", value: "en" })
-  // ];
 }
 
-// TODO: combolist
-async function handler(credentials) {
-  const currentUrl = "https://www.webnovel.com";
-  const cookieJar = new CookieJar();
-
-  // we're android now
-  const x = BigInt(Math.floor(1000000000 + Math.random() * 2000000000));
-  const uuid = new UUID(x, x);
-
+async function authenticate(ctx) {
   try {
     // wait for cookies to be set
-    await userLogin({ uuid, credentials });
+    await userLogin(ctx);
   } catch (err) {
     if (!err.options || err.options.code !== 11318) {
       throw err;
     }
 
-    console.error(err.options);
-
     const {
       data: { encry }
-    } = await login.sendTrustEmail(uuid, err.options.data.encry);
-
-    console.log(encry);
+    } = await login.sendTrustEmail({ ...ctx, encry: err.options.data.encry });
 
     // TODO: tempmail api, or some imap client
     const code = await rlp.questionAsync("Webnovel Guard code: ");
 
-    const codeRes = await login.checkCode(uuid, encry, code);
+    const { data } = await login.confirmCode({ ...ctx, encry, code });
 
-    console.log(codeRes);
+    // validate login
+    await login.validate({
+      userId: data.userid,
+      userKey: data.ukey,
+      ticket: data.ticket
+    });
 
-    setCookies(codeRes.data, cookieJar);
+    setCookies(data, ctx.cookieJar);
   }
+}
 
-  // TODO: "loginsign" cookie needs to updated on every req
-  // i just did it inside the user method rn..
-  const { body } = await user.current(uuid, cookieJar);
-  console.log(body);
+async function work(ctx) {
+  const {
+    body: { Data: userInfo }
+  } = await user.current(ctx);
+
+  // TODO: farm SS or some shit
+
+  console.log(userInfo);
+}
+
+async function handler(credentials) {
+  const cookieJar = new CookieJar();
+
+  // we're android now
+  // const x = BigInt(Math.floor(1000000000 + Math.random() * 2000000000));
+
+  // TODO: make an account -> UUID cache so we don't trigger verification mechanism
+  // const uuid = new UUID(x, x).toString("");
+  const uuid = "000000003ede1bf9000000003ede1bf9";
+
+  const ctx = {
+    uuid,
+    credentials,
+    cookieJar
+  };
+
+  // auth
+  await authenticate(ctx);
+
+  // work
+  setInterval(async () => {
+    try {
+      await work(ctx);
+    } catch (err) {
+      console.error(err);
+      await authenticate(ctx);
+      await work(ctx);
+    }
+  }, 5 * 10e2);
 }
 
 (async () => {
+  // TODO: combolist
   await handler({
-    username: "",
-    password: ""
+    username: "wijo@4easyemail.com",
+    password: "UT6bp8X3Nee6XwJGYC"
   });
 })();

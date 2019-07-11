@@ -120,7 +120,7 @@ async function validate({ uuid, ticket, userId, userKey }) {
     }
   );
 
-  if (body.code !== 0) {
+  if (body.Result !== 0) {
     console.error(body);
     throw new AuthError("Login validation failed.", 3, body);
   }
@@ -128,7 +128,7 @@ async function validate({ uuid, ticket, userId, userKey }) {
   return body;
 }
 
-async function sendTrustEmail(uuid, encry) {
+async function sendTrustEmail({ uuid, encry }) {
   const { body } = await got.post(
     "https://ptlogin.webnovel.com/sdk/sendtrustemail",
     {
@@ -153,9 +153,9 @@ async function sendTrustEmail(uuid, encry) {
   return body;
 }
 
-async function checkCode(uuid, encry, code) {
+async function confirmCode({ uuid, encry, code }) {
   const { body } = await got.post(
-    "https://ptlogin.webnovel.com/sdk/sendtrustemail",
+    "https://ptlogin.webnovel.com/sdk/checktrust",
     {
       headers: {
         "user-agent": userAgent(uuid),
@@ -179,4 +179,65 @@ async function checkCode(uuid, encry, code) {
   return body;
 }
 
-module.exports = { android, web, validate, sendTrustEmail, checkCode };
+async function register({ uuid, account, password }) {
+  const { body } = await got.post(
+    "https://ptlogin.webnovel.com/sdk/doregister",
+    {
+      headers: {
+        "user-agent": userAgent(uuid),
+        wdToken: wdToken(uuid)
+      },
+      form: true,
+      body: {
+        ...common,
+        signature: sign.payload(uuid),
+        nextAction: 0,
+        account,
+        password
+      },
+      json: true
+    }
+  );
+
+  if (body.code !== 0) {
+    throw new AuthError("Failed to register.", 6, body);
+  }
+
+  return body;
+}
+
+async function confirmEmail({ uuid, emailkey, code }) {
+  const { body } = await got.post(
+    "https://ptlogin.webnovel.com/sdk/checktrust",
+    {
+      headers: {
+        "user-agent": userAgent(uuid),
+        wdToken: wdToken(uuid)
+      },
+      form: true,
+      body: {
+        ...common,
+        signature: sign.payload(uuid),
+        emailkey,
+        code
+      },
+      json: true
+    }
+  );
+
+  if (body.code !== 0) {
+    throw new AuthError("Failed to confirm email.", 5, body);
+  }
+
+  return body;
+}
+
+module.exports = {
+  android,
+  web,
+  validate,
+  sendTrustEmail,
+  confirmCode,
+  confirmEmail,
+  register
+};

@@ -1,20 +1,39 @@
 const { Cookie } = require("tough-cookie");
 
-function parse(data, cookieJar) {
-  const { userid, ukey } = data;
+const apiUrl = "https://idruid.webnovel.com";
 
-  console.log(data);
-
+function parse({ userid, ukey }, cookieJar) {
   const cookies = [
     new Cookie({ key: "ywkey", value: ukey }),
     new Cookie({ key: "ywguid", value: userid }),
-    new Cookie({ key: "webnovel-language", value: "en" }),
-    new Cookie({ key: "webnovel-content-language", value: "en" })
+    new Cookie({
+      key: "lang",
+      value: "cn"
+    }),
+    new Cookie({
+      key: "domain",
+      value: ".webnovel.com"
+    }),
+    new Cookie({
+      key: "appId",
+      value: "901"
+    }),
+    new Cookie({
+      key: "areaId",
+      value: "1"
+    }),
+    new Cookie({
+      key: "webnovel-language",
+      value: "en"
+    }),
+    new Cookie({
+      key: "webnovel-content-language",
+      value: "en"
+    })
   ];
 
   for (const c of cookies) {
-    console.log(c);
-    cookieJar.setCookieSync(c, "https://www.webnovel.com");
+    cookieJar.setCookieSync(c, apiUrl);
   }
 }
 
