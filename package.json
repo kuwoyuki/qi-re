@@ -8,6 +8,7 @@
   "dependencies": {
     "got": "^9.6.0",
     "node-rsa": "^1.0.5",
+    "readline-promise": "^1.0.4",
     "tough-cookie": "^3.0.1"
   },
   "devDependencies": {

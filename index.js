@@ -1,8 +1,19 @@
+/* global BigInt */
 const login = require("./src/methods/login");
-const ping = require("./src/methods/ping");
-const tasks = require("./src/methods/tasks");
-const { AuthError } = require("./src/errors");
+// const ping = require("./src/methods/ping");
+// const tasks = require("./src/methods/tasks");
+// const { AuthError } = require("./src/errors");
 const { Cookie, CookieJar } = require("tough-cookie");
+const UUID = require("./src/helpers/uuid");
+const user = require("./src/methods/user");
+const setCookies = require("./src/helpers/loginResponse");
+const readline = require("readline-promise").default;
+
+const rlp = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true
+});
 
 /**
  * Login into webnovel
@@ -10,25 +21,29 @@ const { Cookie, CookieJar } = require("tough-cookie");
  * @param {*} { credentials, token, cookieJar }
  * @returns {Array<Cookie>}
  */
-async function userLogin({ credentials, token, cookieJar }) {
-  const { body } = await login.web(
-    { ...credentials, _csrfToken: token },
-    cookieJar
-  );
-
+async function userLogin({ uuid, credentials, cookieJar }) {
   const {
-    code,
-    data: { uid, ukey }
-  } = body;
+    data: { userid, ukey, ticket }
+  } = await login.android({ uuid, ...credentials }, cookieJar);
 
-  if (code !== 0) {
-    throw new AuthError("Login failed.", 1, { body });
-  }
+  // validate login
+  const status = await login.validate({
+    uuid,
+    userId: userid,
+    userKey: ukey,
+    ticket
+  });
 
-  return [
-    new Cookie({ key: "ukey", value: ukey }),
-    new Cookie({ key: "uid", value: uid })
-  ];
+  // TODO: rm
+  console.log(status);
+
+  setCookies({ userid, ukey }, cookieJar);
+  // return [
+  //   new Cookie({ key: "ywkey", value: ukey }),
+  //   new Cookie({ key: "ywguid", value: userid }),
+  //   new Cookie({ key: "webnovel-language", value: "en" }),
+  //   new Cookie({ key: "webnovel-content-language", value: "en" })
+  // ];
 }
 
 // TODO: combolist
@@ -36,43 +51,45 @@ async function handler(credentials) {
   const currentUrl = "https://www.webnovel.com";
   const cookieJar = new CookieJar();
 
-  // set csrf/uuid
-  await ping(cookieJar);
-  const [{ value: token }] = cookieJar.getCookiesSync(currentUrl);
+  // we're android now
+  const x = BigInt(Math.floor(1000000000 + Math.random() * 2000000000));
+  const uuid = new UUID(x, x);
 
-  // login for these creds
-  const ctxLogin = async () => {
-    const cookies = await userLogin({ cookieJar, token, credentials });
-    // set user session cookies
-    for (const c of cookies) {
-      console.log(c);
-      cookieJar.setCookieSync(c, currentUrl);
+  try {
+    // wait for cookies to be set
+    await userLogin({ uuid, credentials });
+  } catch (err) {
+    if (!err.options || err.options.code !== 11318) {
+      throw err;
     }
-  };
 
-  for (;;) {
-    try {
-      // wait for cookies to be set
-      await ctxLogin();
+    console.error(err.options);
 
-      const ctx = { cookieJar, query: { _csrfToken: token } };
-      const { body } = await tasks.list(ctx);
+    const {
+      data: { encry }
+    } = await login.sendTrustEmail(uuid, err.options.data.encry);
 
-      console.log(body);
-    } catch (err) {
-      if (err.name === "AuthError") {
-        console.error(err.options);
-        throw err;
-      }
-      // TODO: only loop on login errors (rethrow rest)
-      console.error(err);
-    }
+    console.log(encry);
+
+    // TODO: tempmail api, or some imap client
+    const code = await rlp.questionAsync("Webnovel Guard code: ");
+
+    const codeRes = await login.checkCode(uuid, encry, code);
+
+    console.log(codeRes);
+
+    setCookies(codeRes.data, cookieJar);
   }
+
+  // TODO: "loginsign" cookie needs to updated on every req
+  // i just did it inside the user method rn..
+  const { body } = await user.current(uuid, cookieJar);
+  console.log(body);
 }
 
 (async () => {
   await handler({
-    username: "berdudadro@desoz.com",
-    password: "123123qwe"
+    username: "",
+    password: ""
   });
 })();
