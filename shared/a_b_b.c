@@ -1,23 +1,3 @@
-# QI "worker"
-
-auth works.
-
-###
-
-`libload-jni.so` has a chapter encryption function.
-
-```java
-byte[] b = C0000b.m0b(j, j2, bArr, QDUserManager.getInstance().mo36470a(), AppInfo.m9267a().mo21343p());
-// b bookId chapterId content userId (jwguid) IMEI (UUID)
-
-// b :: long -> long -> byte[] -> long -> String -> byte[]
-public static native byte[] a.b.b(long j, long j2, byte[] bArr, long j3, String str);
-```
-
-**Edit**: C pseudocode from IDA w/ signatures
-
-```c
-// 0x000015f0
 jbyteArray __fastcall Java_a_b_b(JNIEnv *env, jobject thiz, jlong arg1, jlong arg2, jbyteArray arg3, jlong arg4, jstring arg5)
 {
   JNIEnv *v7;           // r4
@@ -179,4 +159,3 @@ jbyteArray __fastcall Java_a_b_b(JNIEnv *env, jobject thiz, jlong arg1, jlong ar
 
   return v27;
 }
-```
