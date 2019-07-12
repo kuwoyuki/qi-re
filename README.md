@@ -1,14 +1,63 @@
 # QI/Webnovel/Qidian? API client
 
-Node.js client for Qidian APIs. Uses native app endpoints.
+Node.js client for Qidian APIs build by reverse engineering their native application. Uses native app endpoints.
 
-If you just want to use this as a reference the tricky parts are:
+_Note:_ All endpoints default to webnovel.com's.
+
+If you just want to use this as a reference the useful files are:
 
 - [crypto](/src/crypto)
 - [wdToken](/src/helpers/wdToken.js)
 - [signatures](/src/helpers/signatures.js)
 
 The rest is just traffic sniffing.
+
+## Usage
+
+```sh
+yarn add webnovel.js
+```
+
+```js
+const { Client: WNClient } = require("webnovel.js");
+
+(async () => {
+  const email = "some@mail.com";
+
+  const wnClient = new WNClient({
+    username: email,
+    password: "supersekret",
+    uuid: "000000003ede1bf9000000003ede1bf9" // UUID
+  });
+
+  const res = await client.login(true);
+
+  // Since we set emailVer = true we need to manually check for "encry" (email verification token)
+  // you can of course catch and call client.sendEmail() on your own
+  const {
+    data: { encry }
+  } = res;
+
+  // if you want their auth "HELLO" response
+  let user;
+
+  if (encry) {
+    // get the emailed code
+    const code = await imapMagicGetCodeFromEmail(email);
+    user = await client.confirmCode(encry, code); // cookies get set here
+  } else {
+    user = res;
+  }
+
+  const {
+    body: {
+      Data: { Email }
+    }
+  } = client.apiClient("/user/get");
+
+  // Email === email
+})();
+```
 
 ## Classes
 
