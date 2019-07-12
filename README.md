@@ -18,7 +18,7 @@ public static native byte[] a.b.b(long j, long j2, byte[] bArr, long j3, String 
 My guess at `Java_a_b_b`
 
 ```java
-public static byte[] b(int bookId, int chapterId, byte[] bs, long userId, String imei) {
+public static byte[] b(long bookId, long chapterId, byte[] bs, long userId, String imei) {
     // First secret, calls s :: String -> String -> String
     // SHA1 HMAC?
     String secret1 = s(
@@ -33,7 +33,7 @@ public static byte[] b(int bookId, int chapterId, byte[] bs, long userId, String
     // Second secret, calls m :: String -> String -> String
     // something MD5
     String secret2 = m(
-      uid + "",
+      bookId + "",
       secret1 + imei
     );
 
