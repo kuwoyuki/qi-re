@@ -55,7 +55,6 @@ class Magik {
             } catch (e: Exception) {
                 str3
             }
-
         } catch (e2: Exception) {
             null
 
