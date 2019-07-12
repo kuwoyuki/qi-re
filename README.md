@@ -1,4 +1,8 @@
-# QI/Webnovel/Qidian? API client
+# Webnovel/Qidian API client
+
+![npm bundle size](https://img.shields.io/bundlephobia/min/webnovel.js.svg)
+![NPM](https://img.shields.io/npm/l/webnovel.js.svg)
+![npm](https://img.shields.io/npm/dm/webnovel.js.svg)
 
 Node.js client for Qidian APIs build by reverse engineering their native application. Uses native app endpoints.
 
