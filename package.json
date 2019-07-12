@@ -1,5 +1,5 @@
 {
-  "name": "qi-re",
+  "name": "webnovel.js",
   "version": "0.1.0",
   "description": "qidian international (webnovel) RE stuff",
   "main": "index.js",
@@ -7,11 +7,12 @@
   "license": "MIT",
   "dependencies": {
     "got": "^9.6.0",
-    "node-rsa": "^1.0.5",
-    "readline-promise": "^1.0.4",
     "tough-cookie": "^3.0.1"
   },
   "devDependencies": {
     "eslint": "^6.0.1"
+  },
+  "scripts": {
+    "docs": "jsdoc2md src/client.js > api.md"
   }
 }

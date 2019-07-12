@@ -24,15 +24,13 @@ class Magik {
             secret2 = secret2.substring(0, 24)
         }
 
-        // Double decrypt with DES?
-
+        // 2 rounds with DES?
         // d :: byte[] -> String -> byte[]
         val res = des(bs, secret2) ?: return null
 
         return des(res, secret1)
     }
 
-    /* renamed from: a */
     private fun pad(str: String, i: Int, c: Char): String {
         val sb = StringBuilder()
         sb.append(str)

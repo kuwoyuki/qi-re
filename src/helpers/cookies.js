@@ -1,11 +1,16 @@
 const { Cookie } = require("tough-cookie");
 
-const apiUrl = "https://idruid.webnovel.com";
-
-function parse({ userid, ukey }, cookieJar) {
-  const cookies = [
-    new Cookie({ key: "ywkey", value: ukey }),
-    new Cookie({ key: "ywguid", value: userid }),
+/**
+ * Build a cookie array, used for API requests
+ *
+ * @param {string} userId
+ * @param {string} userKey
+ * @returns {Array<Cookie>}
+ */
+function buildCookies(userId, userKey) {
+  return [
+    new Cookie({ key: "ywkey", value: userId }),
+    new Cookie({ key: "ywguid", value: userKey }),
     new Cookie({
       key: "lang",
       value: "cn"
@@ -31,10 +36,6 @@ function parse({ userid, ukey }, cookieJar) {
       value: "en"
     })
   ];
-
-  for (const c of cookies) {
-    cookieJar.setCookieSync(c, apiUrl);
-  }
 }
 
-module.exports = parse;
+module.exports = buildCookies;

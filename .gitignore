@@ -88,5 +88,4 @@ typings/
 .dynamodb/
 
 # flows
-droid/*
-!droid/source/
+misc/droid/*

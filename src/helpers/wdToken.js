@@ -1,9 +1,11 @@
-const AES = require("../crypto/aes");
+const { AES } = require("../crypto");
 
 const aes = new AES();
 
 /**
- * works.
+ * AES encrypted wdToken header - Chinese telemetry =)
+ * @param {string} uuid - UUID
+ * @returns {string} wdToken
  */
 const token = (uuid) =>
   aes.encrypt(

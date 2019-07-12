@@ -19,7 +19,7 @@ class UUID {
   /**
    * get the UUID string, pass empty string for no separator (webnovel needs it)
    *
-   * @param {string} [separator="-"]
+   * @param {string} separator=-
    * @returns {string}
    * @memberof UUID
    */

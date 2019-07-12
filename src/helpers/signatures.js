@@ -1,17 +1,21 @@
-const d3 = require("../crypto/des3");
+const { des3 } = require("../crypto");
 
 /**
- * unix timestamp w/o ms
+ * current unix timestamp w/o ms
  */
 const ts = () => (+new Date() / 1000) | 0;
 
 module.exports = {
   /**
-   * w/ second uuid (form payload)
+   * DES3 signature w/ second uuid (form payload)
+   * @param {string} uuid - UUID
+   * @returns {string} des3 sig
    */
-  payload: (uuid) => d3(`${uuid}|${uuid}|${ts()}`),
+  payload: (uuid) => des3(`${uuid}|${uuid}|${ts()}`),
   /**
-   * w/o second uuid (loginsign) cookie
+   * DES3 signature w/o second uuid (loginsign) cookie
+   * @param {string} uuid - UUID
+   * @returns {string} des3 sig
    */
-  cookie: (uuid) => d3(`${uuid}||${ts()}`)
+  cookie: (uuid) => des3(`${uuid}||${ts()}`)
 };

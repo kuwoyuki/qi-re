@@ -1,6 +1,9 @@
 module.exports = {
-  userAgent: (uuid) =>
-    `Mozilla/mobile QDHWReaderAndroid/3.8.2/183/2000002/${uuid}`,
+  userAgent: require("./userAgent"),
   wdToken: require("./wdToken"),
-  sign: require("./signatures")
+  sign: require("./signatures"),
+  buildCookies: require("./cookies"),
+  clients: require("./requestClients"),
+  defaults: require("./defaults"),
+  UUID: require("./uuid")
 };

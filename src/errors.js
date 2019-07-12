@@ -1,3 +1,9 @@
+/**
+ * Authentication error
+ *
+ * @class AuthError
+ * @extends {Error}
+ */
 class AuthError extends Error {
   constructor(message, code, options = {}) {
     super(message);
