@@ -5,6 +5,15 @@
   "main": "index.js",
   "author": "kuwoyuki <kuwoyuki@cock.li>",
   "license": "MIT",
+  "homepage": "https://github.com/kuwoyuki/qi-re",
+  "bugs": {
+    "url": "https://github.com/kuwoyuki/qi-re/issues",
+    "email": "kuwoyuki@cock.li"
+  },
+  "engines": {
+    "node": ">=8.6"
+  },
+  "repository": "github:kuwoyuki/qi-re",
   "dependencies": {
     "got": "^9.6.0",
     "tough-cookie": "^3.0.1"
