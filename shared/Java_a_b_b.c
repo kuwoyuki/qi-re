@@ -76,6 +76,7 @@ jbyteArray __fastcall Java_a_b_b(JNIEnv *env, jobject thiz, jlong arg1, jlong ar
   v31 = ((int(__fastcall *)(JNIEnv *, char *))(*v7)->NewStringUTF)(v7, v8);
 
   // sha1 id
+  // sha1 hmac?
   v16 = ((int(__fastcall *)(JNIEnv *, int, const char *, const char *))(*v7)->GetStaticMethodID)(
       v7,
       v12,
@@ -103,6 +104,8 @@ jbyteArray __fastcall Java_a_b_b(JNIEnv *env, jobject thiz, jlong arg1, jlong ar
   strcat(v10, v30);
 
   v19 = ((int(__fastcall *)(JNIEnv *, char *))(*v7)->NewStringUTF)(v7, v10);
+
+  // a.b.m
   v20 = ((int(__fastcall *)(JNIEnv *, int, const char *, const char *))(*v7)->GetStaticMethodID)(
       v7,
       v34,
@@ -113,6 +116,9 @@ jbyteArray __fastcall Java_a_b_b(JNIEnv *env, jobject thiz, jlong arg1, jlong ar
     return 0;
 
   v21 = ((int(__fastcall *)(JNIEnv *, char *))(*v7)->NewStringUTF)(v7, src);
+
+  // com.qidian.QDReader.core.i.r.a :: String -> String -> byte[] -> String
+  // md5 hash of 2 strings then base64?
   v22 = ((int(__fastcall *)(JNIEnv *, int, int, int, int))(*v7)->CallStaticObjectMethod)(v7, v34, v20, v21, v19);
 
   ((void(__fastcall *)(JNIEnv *, int, char *))(*v7)->ReleaseStringUTFChars)(v7, v19, v10);
