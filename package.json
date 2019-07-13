@@ -1,6 +1,6 @@
 {
   "name": "webnovel.js",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Webnovel/Qidian closed API client for Node.js",
   "main": "index.js",
   "author": "kuwoyuki <kuwoyuki@cock.li>",
