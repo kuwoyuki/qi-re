@@ -42,13 +42,12 @@ const { Client: WNClient } = require("webnovel.js");
     data: { encry }
   } = res;
 
-  // if you want their auth "HELLO" response
+  // if you want raw tokens (ticket, autologin)
   let user;
 
   if (encry) {
-    // get the emailed code
-    const code = await imapMagicGetCodeFromEmail(email);
-    user = await client.confirmCode(encry, code); // cookies get set here
+    const code = await getCodeUsingIMAP(email); // somehow get the emailed code
+    user = await client.confirmCode(encry, code); // cookies now set
   } else {
     user = res;
   }
@@ -57,7 +56,7 @@ const { Client: WNClient } = require("webnovel.js");
     body: {
       Data: { Email }
     }
-  } = client.apiClient("/user/get");
+  } = await client.apiClient("/user/get");
 
   console.log(Email === email); // true
 
@@ -65,21 +64,26 @@ const { Client: WNClient } = require("webnovel.js");
   const bookId = "8205217405006105";
 
   // destructure the first chapter
+  // *note*: check com.qidian.QDReader.components.book.al.QDChapterManager
+  // you probably need to send some other requests, I'm getting some incorrect
+  // chapter IDs.. maybe /book-case/report-operation-time
   const {
     body: {
-      Chapters: [{ Id: firstChapterId }]
+      Data: {
+        Chapters: [, { Id: secChptID }]
+      }
     }
-  } = await wnClient.apiClient("/book/get-chapters", {
+  } = await client.apiClient("/book/get-chapters", {
     query: {
-      bookId: "8205217405006105",
+      bookId,
       maxUpdateTime: 0,
       maxIndex: 0,
-      sign: null
+      sign: ""
     }
   });
 
   // have fun
-  const chapter = await client.getChapter(bookId, firstChapterId);
+  const chapter = await client.getChapter(bookId, secChptID);
   console.log(chapter);
 })();
 ```

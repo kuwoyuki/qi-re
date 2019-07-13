@@ -1,55 +1,67 @@
-// const { Client: WNClient } = require("../index");
-/**
- *
- *
- * @param {WNClient} client
- */
-// async function handler(client) {
-  // auth
-  // try {
-    // const login = await client.login(true);
-    // console.log(login);
+const { Client: WNClient } = require("../index");
 
-    // // ZTJ
-    // const bookId = "8205217405006105";
+(async () => {
+  const email = "some@mail.com";
 
-    // const {
-    //   body: {
-    //     Chapters: [{ Id: firstChapterId }]
-    //   }
-    // } = await wnClient.apiClient("/book/get-chapters", {
-    //   query: {
-    //     bookId,
-    //     maxUpdateTime: 0,
-    //     maxIndex: 0,
-    //     sign: null
-    //   }
-    // });
+  const client = new WNClient({
+    username: email,
+    password: "supersekret",
+    uuid: "000000003ede1bf9000000003ede1bf9" // UUID
+  });
 
-    // const chapter = await client.getChapter(bookId, firstChapterId);
+  const res = await client.login(true);
 
-  // } catch (err) {
-  //   console.log(err, err.code, err.options);
-  // }
-  // work
-//   setInterval(async () => {
-//     try {
-//       const { body } = await client.apiClient();
-//       console.log(body);
-//     } catch (err) {
-//       console.error(err);
-//       // await authenticate(ctx);
-//       // await work(ctx);
-//     }
-//   }, 5 * 10e2);
-// }
+  // Since we set emailVer = true we need to manually check for "encry" (email verification token)
+  // you can of course catch and call client.sendEmail() on your own
+  const {
+    data: { encry }
+  } = res;
 
-// (async () => {
-//   const wnClient = new WNClient({
-//     username: "wijo@4easyemail.com",
-//     password: "UT6bp8X3Nee6XwJGYC",
-//     uuid: "000000003ede1bf9000000003ede1bf9"
-//   });
-//   // wnClient.
-//   await handler(wnClient);
-// })();
+  // if you want their auth "HELLO" response
+  let user;
+
+  if (encry) {
+    // get the emailed code
+    // const code = await getCodeUsingIMAP(email);
+    const code = "ABCDE";
+    user = await client.confirmCode(encry, code); // cookies get set here
+  } else {
+    user = res;
+  }
+
+  console.log(user);
+
+  const {
+    body: {
+      Data: { Email }
+    }
+  } = await client.apiClient("/user/get");
+
+  console.log(Email === email); // true
+
+  // Ze Tian Ji 😍
+  const bookId = "8205217405006105";
+
+  // destructure the first chapter
+  // *note*: check com.qidian.QDReader.components.book.al.QDChapterManager
+  // you probably need to send some other requests, I'm getting some incorrect
+  // chapter IDs..
+  const {
+    body: {
+      Data: {
+        Chapters: [, { Id: secChpt }]
+      }
+    }
+  } = await client.apiClient("/book/get-chapters", {
+    query: {
+      bookId,
+      maxUpdateTime: 0,
+      maxIndex: 0,
+      sign: ""
+    }
+  });
+
+  // have fun
+  const chapter = await client.getChapter(bookId, secChpt);
+  console.log(chapter);
+})();
