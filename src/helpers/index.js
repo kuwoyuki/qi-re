@@ -5,5 +5,6 @@ module.exports = {
   buildCookies: require("./cookies"),
   clients: require("./requestClients"),
   defaults: require("./defaults"),
-  UUID: require("./uuid")
+  UUID: require("./uuid"),
+  decryptChapter: require("./decryptChapter")
 };

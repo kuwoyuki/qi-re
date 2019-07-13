@@ -3,14 +3,15 @@ const { Cookie } = require("tough-cookie");
 /**
  * Build a cookie array, used for API requests
  *
- * @param {string} userId
- * @param {string} userKey
+ * @param {Object} user
+ * @param {string} user.userid - user id
+ * @param {string} user.ukey - user session key
  * @returns {Array<Cookie>}
  */
-function buildCookies(userId, userKey) {
+function buildCookies({ userid, ukey }) {
   return [
-    new Cookie({ key: "ywkey", value: userId }),
-    new Cookie({ key: "ywguid", value: userKey }),
+    new Cookie({ key: "ywkey", value: ukey }),
+    new Cookie({ key: "ywguid", value: userid }),
     new Cookie({
       key: "lang",
       value: "cn"

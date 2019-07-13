@@ -28,7 +28,7 @@ const { Client: WNClient } = require("webnovel.js");
 (async () => {
   const email = "some@mail.com";
 
-  const wnClient = new WNClient({
+  const client = new WNClient({
     username: email,
     password: "supersekret",
     uuid: "000000003ede1bf9000000003ede1bf9" // UUID
@@ -59,9 +59,33 @@ const { Client: WNClient } = require("webnovel.js");
     }
   } = client.apiClient("/user/get");
 
-  // Email === email
+  console.log(Email === email); // true
+
+  // Ze Tian Ji 😍
+  const bookId = "8205217405006105";
+
+  // destructure the first chapter
+  const {
+    body: {
+      Chapters: [{ Id: firstChapterId }]
+    }
+  } = await wnClient.apiClient("/book/get-chapters", {
+    query: {
+      bookId: "8205217405006105",
+      maxUpdateTime: 0,
+      maxIndex: 0,
+      sign: null
+    }
+  });
+
+  // have fun
+  const chapter = await client.getChapter(bookId, firstChapterId);
+  console.log(chapter);
 })();
 ```
+
+The client class only implements complex/encrypted/signed requests, so for the most part you need to manually find the endpoint you need and use the `Client.apiClient` Got instance to request it.  
+Most API endpoints are declared in the `com.qidian.QDReader.components.api` package, in the `Urls` class.
 
 ## Classes
 
@@ -115,6 +139,7 @@ Webnovel client, instantiate, login then call the API endpoints using `this.apiC
     - [.apiClient](#Client+apiClient) : <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
     - [.confirmCode(encry, code)](#Client+confirmCode) ⇒ <code>Object</code>
     - [.login(emailVer)](#Client+login) ⇒ <code>Object</code>
+    - [.getChapter(bookId, chapterId)](#Client+getChapter) ⇒ <code>Object</code>
   - _static_
     - [.Client](#Client.Client)
       - [new Client(obj)](#new_Client.Client_new)
@@ -173,6 +198,20 @@ Login into Webnovel
 | Param    | Type                 | Default            | Description                                                           |
 | -------- | -------------------- | ------------------ | --------------------------------------------------------------------- |
 | emailVer | <code>boolean</code> | <code>false</code> | Set to true if you want it to pass and send an email with a ver. code |
+
+<a name="Client+getChapter"></a>
+
+### client.getChapter(bookId, chapterId) ⇒ <code>Object</code>
+
+Get and decrypt a chapter, unauthenticated requests probably won't work.
+
+**Kind**: instance method of [<code>Client</code>](#Client)  
+**Returns**: <code>Object</code> - The original chapter response with the `body['Data']['ContentItems']` property decrypted.
+
+| Param     | Type                | Description |
+| --------- | ------------------- | ----------- |
+| bookId    | <code>string</code> | Book ID     |
+| chapterId | <code>string</code> | Chapter ID  |
 
 <a name="Client.Client"></a>
 

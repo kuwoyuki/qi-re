@@ -20,8 +20,5 @@
   },
   "devDependencies": {
     "eslint": "^6.0.1"
-  },
-  "scripts": {
-    "docs": "jsdoc2md src/client.js > api.md"
   }
 }

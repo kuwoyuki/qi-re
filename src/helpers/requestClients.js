@@ -43,8 +43,7 @@ const api = ({ uuid, cookieJar, apiURL }) =>
     baseUrl: `${apiURL}/app/api`,
     cookieJar,
     headers: {
-      "User-Agent": userAgent(uuid),
-      wdToken: wdToken(uuid)
+      "User-Agent": userAgent(uuid)
     },
     hooks: {
       beforeRequest: [

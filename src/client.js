@@ -1,6 +1,13 @@
 /* global BigInt */
 const { CookieJar, Cookie } = require("tough-cookie");
-const { UUID, buildCookies, clients, defaults, sign } = require("./helpers");
+const {
+  UUID,
+  buildCookies,
+  clients,
+  defaults,
+  sign,
+  decryptChapter
+} = require("./helpers");
 const { AuthError } = require("./errors");
 
 /**
@@ -25,7 +32,8 @@ class Client {
       credentials: { username, password },
       cookieJar: new CookieJar(),
       apiURL: apiURL || "https://idruid.webnovel.com",
-      authURL: authURL || "https://ptlogin.webnovel.com/sdk"
+      authURL: authURL || "https://ptlogin.webnovel.com/sdk",
+      uuid
     };
 
     if (!uuid) {
@@ -63,15 +71,18 @@ class Client {
    *
    * @private
    * @param {Object} user
-   * @param {string} user.userId
-   * @param {string} user.userKey
+   * @param {string} user.userid
+   * @param {string} user.ukey
    * @memberof Client
    */
   setCookies(user) {
+    this.ctx.userId = user.userid;
+    this.ctx.userKey = user.ukey;
+
     const cookies = buildCookies(user);
 
     for (const c of cookies) {
-      this.cookieJar.setCookieSync(c, this.ctx.apiURL);
+      this.ctx.cookieJar.setCookieSync(c, this.ctx.apiURL);
     }
   }
 
@@ -213,6 +224,34 @@ class Client {
     }
 
     this.setCookies(data);
+
+    return body;
+  }
+
+  /**
+   * gets and decrypts a chapter, unauthenticated requests probably won't work
+   *
+   * @param {string} bookId
+   * @param {string} chapterId
+   * @memberof Client
+   * @returns {Object}
+   */
+  async getChapter(bookId, chapterId) {
+    const { body } = await this.apiClient("/book/get-chapter", {
+      query: {
+        bookId,
+        chapterId
+      }
+    });
+
+    body.Data.ContentItems = JSON.parse(
+      decryptChapter(
+        String(chapterId),
+        body.Data.ContentItems,
+        String(this.ctx.userId),
+        this.ctx.uuid
+      )
+    ).ContentItems;
 
     return body;
   }
