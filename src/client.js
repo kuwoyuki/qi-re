@@ -1,5 +1,5 @@
 /* global BigInt */
-const { CookieJar, Cookie } = require("tough-cookie");
+const { CookieJar, Cookie, getPublicSuffix } = require("tough-cookie");
 const {
   UUID,
   buildCookies,
@@ -9,6 +9,23 @@ const {
   decryptChapter
 } = require("./helpers");
 const { AuthError } = require("./errors");
+const { promisify } = require("util");
+const url = require("url");
+
+/**
+ * Auth methods session info
+ * @typedef {Object} SessionInfo
+ * @property {number} code - status code.
+ * @property {Object} data - Session data
+ * @property {string} data.ticket - Session validation ticket
+ * @property {string} data.ukey - Currently logged in user's key (used in jwkey cookie)
+ * @property {number} data.autoLoginFlag - Whether we logged in with an autologin flag
+ * @property {string} data.autoLoginSessionKey - AL session key
+ * @property {number} data.autoLoginKeepTime - AL session lifetime
+ * @property {number} data.autoLoginExpiredTime - expiration unix timestamp
+ * @property {number} data.userid - user ID
+ * @property {string} msg - ok.
+ */
 
 /**
  * Webnovel client
@@ -28,12 +45,25 @@ class Client {
    * @memberof Client
    */
   constructor({ username, password, apiURL, authURL, uuid }) {
+    /**
+     * @property {Object} credentials - Auth credentials
+     * @property {CookieJar} cookieJar - CookieJar instance
+     * @property {string} apiURL - API base URL
+     * @property {string} authURL - Auth API base URL
+     * @property {string} uuid - IMEI/UUID,
+     * @property {Object} session - Session properties, can be used to manually resume sessions
+     * @property {number} session.id - User session ID
+     * @property {string} session.key - User session key
+     * @property {string} session.autoLoginKey - User session autologin key
+     * @property {string} session.autoLoginExpires - Autologin expiration time
+     */
     this.ctx = {
       credentials: { username, password },
       cookieJar: new CookieJar(),
       apiURL: apiURL || "https://idruid.webnovel.com",
       authURL: authURL || "https://ptlogin.webnovel.com/sdk",
-      uuid
+      uuid,
+      session: {}
     };
 
     if (!uuid) {
@@ -43,11 +73,20 @@ class Client {
       this.ctx.uuid = new UUID(x, y);
     }
 
+    this.ctx.domain = getPublicSuffix(url.parse(this.ctx.apiURL).hostname);
+    console.log(this.ctx.domain);
+
+    this.setCookie = promisify(
+      this.ctx.cookieJar.setCookie.bind(this.ctx.cookieJar)
+    );
+
     // IMEI cookie
-    this.ctx.cookieJar.setCookieSync(
+    this.setCookie(
       new Cookie({
         key: "imei",
-        value: uuid
+        value: this.ctx.uuid,
+        hostOnly: false,
+        domain: this.ctx.domain
       }),
       this.ctx.apiURL
     );
@@ -76,13 +115,20 @@ class Client {
    * @memberof Client
    */
   setCookies(user) {
-    this.ctx.userId = user.userid;
-    this.ctx.userKey = user.ukey;
+    this.ctx.session = {
+      id: user.userid,
+      key: user.ukey,
+      autoLoginKey: user.autoLoginSessionKey,
+      autoLoginExpires: user.autoLoginExpiredTime
+    };
 
-    const cookies = buildCookies(user);
+    const cookies = buildCookies(user, this.ctx);
 
     for (const c of cookies) {
-      this.ctx.cookieJar.setCookieSync(c, this.ctx.apiURL);
+      this.setCookie(
+        new Cookie({ ...c, hostOnly: false, domain: this.ctx.domain }),
+        this.ctx.apiURL
+      );
     }
   }
 
@@ -132,7 +178,7 @@ class Client {
    *
    * @param {string} encry - encry property from the failed login response
    * @param {string} code - email verif. code
-   * @returns {Object} user info
+   * @returns {Promise<SessionInfo>}
    * @memberof Client
    * @throws {AuthError}
    */
@@ -169,7 +215,7 @@ class Client {
    * Login into Webnovel
    *
    * @param {boolean} emailVer=false - Set to true if you want it to pass and send an email with a ver. code
-   * @returns {Object} user info
+   * @returns {Promise<SessionInfo>}
    * @memberof Client
    * @throws {AuthError}
    */
@@ -229,12 +275,39 @@ class Client {
   }
 
   /**
+   * Resume current session
+   * @returns {Promise<SessionInfo>}
+   * @memberof Client
+   */
+  async resumeSession() {
+    const {
+      auth: { id, key, autoLoginKey, autoLoginExpires }
+    } = this.ctx;
+
+    if (autoLoginExpires - ((Date.now() / 1000) | 0) < 0) {
+      throw new AuthError("Session expired.");
+    }
+
+    const { body } = this.authClient("/checkstatus", {
+      body: {
+        ...defaults.login,
+        signature: sign.payload(this.ctx.uuid),
+        ukey: key,
+        alk: autoLoginKey,
+        userid: id
+      }
+    });
+
+    return body;
+  }
+
+  /**
    * gets and decrypts a chapter, unauthenticated requests probably won't work
    *
    * @param {string} bookId
    * @param {string} chapterId
    * @memberof Client
-   * @returns {Object}
+   * @returns {Promise<Object>}
    */
   async getChapter(bookId, chapterId) {
     const { body } = await this.apiClient("/book/get-chapter", {
@@ -248,7 +321,7 @@ class Client {
       decryptChapter(
         String(chapterId),
         body.Data.ContentItems,
-        String(this.ctx.userId),
+        String(this.ctx.auth.id),
         this.ctx.uuid
       )
     ).ContentItems;

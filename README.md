@@ -13,6 +13,7 @@ If you just want to use this as a reference the useful files are:
 - [crypto](/src/crypto)
 - [wdToken](/src/helpers/wdToken.js)
 - [signatures](/src/helpers/signatures.js)
+- [decryptChapter](/src/helpers/decryptChapter.js) 😰
 
 The rest is just traffic sniffing.
 
@@ -26,10 +27,10 @@ yarn add webnovel.js
 const { Client: WNClient } = require("webnovel.js");
 
 (async () => {
-  const email = "some@mail.com";
+  const username = "some@mail.com";
 
   const client = new WNClient({
-    username: email,
+    username,
     password: "supersekret",
     uuid: "000000003ede1bf9000000003ede1bf9" // UUID
   });
@@ -58,7 +59,7 @@ const { Client: WNClient } = require("webnovel.js");
     }
   } = await client.apiClient("/user/get");
 
-  console.log(Email === email); // true
+  console.log(Email === username); // true
 
   // Ze Tian Ji 😍
   const bookId = "8205217405006105";
@@ -82,49 +83,29 @@ const { Client: WNClient } = require("webnovel.js");
     }
   });
 
-  // have fun
   const chapter = await client.getChapter(bookId, secChptID);
-  console.log(chapter);
+  // ...
 })();
 ```
 
 The client class only implements complex/encrypted/signed requests, so for the most part you need to manually find the endpoint you need and use the `Client.apiClient` Got instance to request it.  
 Most API endpoints are declared in the `com.qidian.QDReader.components.api` package, in the `Urls` class.
 
+Maybe have a look at [examples](/examples) too.
+
 ## Classes
 
 <dl>
 <dt><a href="#Client">Client</a></dt>
-<dd></dd>
-<dt><a href="#AES">AES</a></dt>
-<dd></dd>
-<dt><a href="#UUID">UUID</a></dt>
-<dd></dd>
+<dd><p>Webnovel client, instantiate, login then call the API endpoints using <code>this.apiClient</code></p>
+</dd>
 </dl>
 
-## Functions
+## Typedefs
 
 <dl>
-<dt><a href="#des3">des3(str)</a> ⇒ <code>string</code></dt>
-<dd><p>des3 encrypt string</p>
-</dd>
-<dt><a href="#buildCookies">buildCookies(userId, userKey)</a> ⇒ <code>Array.&lt;Cookie&gt;</code></dt>
-<dd><p>Build a cookie array, used for API requests</p>
-</dd>
-<dt><a href="#auth">auth(ctx)</a> ⇒ <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code></dt>
-<dd><p>Create an auth API Got instance</p>
-</dd>
-<dt><a href="#api">api(ctx)</a> ⇒ <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code></dt>
-<dd><p>Create an API (idroid) Got instance</p>
-</dd>
-<dt><a href="#ts">ts()</a></dt>
-<dd><p>current unix timestamp w/o ms</p>
-</dd>
-<dt><a href="#userAgent">userAgent(uuid)</a> ⇒ <code>string</code></dt>
-<dd><p>Creates a useragent string used by the android app</p>
-</dd>
-<dt><a href="#token">token(uuid)</a> ⇒ <code>string</code></dt>
-<dd><p>AES encrypted wdToken header - Chinese telemetry =)</p>
+<dt><a href="#SessionInfo">SessionInfo</a> : <code>Object</code></dt>
+<dd><p>Auth methods session info</p>
 </dd>
 </dl>
 
@@ -139,11 +120,13 @@ Webnovel client, instantiate, login then call the API endpoints using `this.apiC
 - [Client](#Client)
   - [new Client()](#new_Client_new)
   - _instance_
+    - [.ctx](#Client+ctx)
     - [.authClient](#Client+authClient) : <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
     - [.apiClient](#Client+apiClient) : <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
-    - [.confirmCode(encry, code)](#Client+confirmCode) ⇒ <code>Object</code>
-    - [.login(emailVer)](#Client+login) ⇒ <code>Object</code>
-    - [.getChapter(bookId, chapterId)](#Client+getChapter) ⇒ <code>Object</code>
+    - [.confirmCode(encry, code)](#Client+confirmCode) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
+    - [.login(emailVer)](#Client+login) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
+    - [.resumeSession()](#Client+resumeSession) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
+    - [.getChapter(bookId, chapterId)](#Client+getChapter) ⇒ <code>Promise.&lt;Object&gt;</code>
   - _static_
     - [.Client](#Client.Client)
       - [new Client(obj)](#new_Client.Client_new)
@@ -153,6 +136,26 @@ Webnovel client, instantiate, login then call the API endpoints using `this.apiC
 ### new Client()
 
 Webnovel client
+
+<a name="Client+ctx"></a>
+
+### client.ctx
+
+**Kind**: instance property of [<code>Client</code>](#Client)  
+**Properties**
+
+| Name                     | Type                   | Description                                                 |
+| ------------------------ | ---------------------- | ----------------------------------------------------------- |
+| credentials              | <code>Object</code>    | Auth credentials                                            |
+| cookieJar                | <code>CookieJar</code> | CookieJar instance                                          |
+| apiURL                   | <code>string</code>    | API base URL                                                |
+| authURL                  | <code>string</code>    | Auth API base URL                                           |
+| uuid                     | <code>string</code>    | IMEI/UUID,                                                  |
+| session                  | <code>Object</code>    | Session properties, can be used to manually resume sessions |
+| session.id               | <code>number</code>    | User session ID                                             |
+| session.key              | <code>string</code>    | User session key                                            |
+| session.autoLoginKey     | <code>string</code>    | User session autologin key                                  |
+| session.autoLoginExpires | <code>string</code>    | Autologin expiration time                                   |
 
 <a name="Client+authClient"></a>
 
@@ -172,12 +175,11 @@ Got API (idroid) client instance
 **Access**: public  
 <a name="Client+confirmCode"></a>
 
-### client.confirmCode(encry, code) ⇒ <code>Object</code>
+### client.confirmCode(encry, code) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
 
 Login using email verification code (if login method returned code 11318)
 
 **Kind**: instance method of [<code>Client</code>](#Client)  
-**Returns**: <code>Object</code> - user info  
 **Throws**:
 
 - <code>AuthError</code>
@@ -189,12 +191,11 @@ Login using email verification code (if login method returned code 11318)
 
 <a name="Client+login"></a>
 
-### client.login(emailVer) ⇒ <code>Object</code>
+### client.login(emailVer) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
 
 Login into Webnovel
 
 **Kind**: instance method of [<code>Client</code>](#Client)  
-**Returns**: <code>Object</code> - user info  
 **Throws**:
 
 - <code>AuthError</code>
@@ -203,19 +204,25 @@ Login into Webnovel
 | -------- | -------------------- | ------------------ | --------------------------------------------------------------------- |
 | emailVer | <code>boolean</code> | <code>false</code> | Set to true if you want it to pass and send an email with a ver. code |
 
-<a name="Client+getChapter"></a>
+<a name="Client+resumeSession"></a>
 
-### client.getChapter(bookId, chapterId) ⇒ <code>Object</code>
+### client.resumeSession() ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
 
-Get and decrypt a chapter, unauthenticated requests probably won't work.
+Resume current session
 
 **Kind**: instance method of [<code>Client</code>](#Client)  
-**Returns**: <code>Object</code> - The original chapter response with the `body['Data']['ContentItems']` property decrypted.
+<a name="Client+getChapter"></a>
 
-| Param     | Type                | Description |
-| --------- | ------------------- | ----------- |
-| bookId    | <code>string</code> | Book ID     |
-| chapterId | <code>string</code> | Chapter ID  |
+### client.getChapter(bookId, chapterId) ⇒ <code>Promise.&lt;Object&gt;</code>
+
+gets and decrypts a chapter, unauthenticated requests probably won't work
+
+**Kind**: instance method of [<code>Client</code>](#Client)
+
+| Param     | Type                |
+| --------- | ------------------- |
+| bookId    | <code>string</code> |
+| chapterId | <code>string</code> |
 
 <a name="Client.Client"></a>
 
@@ -233,184 +240,31 @@ Creates an instance of Webnovel Client.
 | obj          | <code>Object</code> |                                                                            |
 | obj.username | <code>string</code> | Webnovel username                                                          |
 | obj.password | <code>string</code> | Webnovel password                                                          |
-| obj.apiURL   | <code>string</code> | override Webnovel API endpoint                                             |
+| obj.apiURL   | <code>string</code> | override Webnovel API endpoint (Qidian should work)                        |
 | obj.authURL  | <code>string</code> | override Webnovel auth API endoint (Qidian should work)                    |
 | obj.uuid     | <code>string</code> | UUID is auto generated if not passed, which will trigger mail verification |
 
-<a name="AES"></a>
-
-## AES
-
-**Kind**: global class
-
-- [AES](#AES)
-  - [.encrypt(str)](#AES+encrypt) ⇒ <code>string</code>
-  - [.decrypt(str)](#AES+decrypt) ⇒ <code>string</code>
-
-<a name="AES+encrypt"></a>
-
-### aes.encrypt(str) ⇒ <code>string</code>
-
-**Kind**: instance method of [<code>AES</code>](#AES)  
-**Returns**: <code>string</code> - base64 encoded string
-
-| Param | Type                | Description |
-| ----- | ------------------- | ----------- |
-| str   | <code>string</code> | utf8 string |
-
-<a name="AES+decrypt"></a>
-
-### aes.decrypt(str) ⇒ <code>string</code>
-
-**Kind**: instance method of [<code>AES</code>](#AES)
-
-| Param | Type                | Description           |
-| ----- | ------------------- | --------------------- |
-| str   | <code>string</code> | base64 encoded string |
-
-<a name="UUID"></a>
-
-## UUID
-
-**Kind**: global class
-
-- [UUID](#UUID)
-  - [new UUID()](#new_UUID_new)
-  - [.toString(separator)](#UUID+toString) ⇒ <code>string</code>
-
-<a name="new_UUID_new"></a>
-
-### new UUID()
-
-UUID builder from (MSB, LSB) values like Java's
-
-<a name="UUID+toString"></a>
-
-### uuid.toString(separator) ⇒ <code>string</code>
-
-get the UUID string, pass empty string for no separator (webnovel needs it)
-
-**Kind**: instance method of [<code>UUID</code>](#UUID)
-
-| Param     | Type                | Default                    |
-| --------- | ------------------- | -------------------------- |
-| separator | <code>string</code> | <code>&quot;-&quot;</code> |
-
-<a name="des3"></a>
-
-## des3(str) ⇒ <code>string</code>
-
-des3 encrypt string
-
-**Kind**: global function  
-**Returns**: <code>string</code> - des-ede3 -> base64 encoded string
-
-| Param | Type                | Description       |
-| ----- | ------------------- | ----------------- |
-| str   | <code>string</code> | utf8 input string |
-
-**Kind**: global function  
-**Returns**: <code>string</code> - aes -> base64 encoded string
-
-| Param | Type                |
-| ----- | ------------------- |
-| str   | <code>string</code> |
-
-<a name="buildCookies"></a>
-
-## buildCookies(userId, userKey) ⇒ <code>Array.&lt;Cookie&gt;</code>
-
-Build a cookie array, used for API requests
-
-**Kind**: global function
-
-| Param   | Type                |
-| ------- | ------------------- |
-| userId  | <code>string</code> |
-| userKey | <code>string</code> |
-
-<a name="auth"></a>
-
-## auth(ctx) ⇒ <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
-
-Create an auth API Got instance
-
-**Kind**: global function
-
-| Param       | Type                | Description           |
-| ----------- | ------------------- | --------------------- |
-| ctx         | <code>Object</code> |                       |
-| ctx.uuid    | <code>string</code> | UUID                  |
-| ctx.authURL | <code>string</code> | Auth API endpoint URL |
-
-<a name="api"></a>
-
-## api(ctx) ⇒ <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
-
-Create an API (idroid) Got instance
-
-**Kind**: global function
-
-| Param         | Type                   | Description      |
-| ------------- | ---------------------- | ---------------- |
-| ctx           | <code>Object</code>    |                  |
-| ctx.uuid      | <code>string</code>    | UUID             |
-| ctx.cookieJar | <code>CookieJar</code> | CookieJar        |
-| ctx.apiURL    | <code>string</code>    | API endpoint URL |
-
-<a name="ts"></a>
-
-## ts()
-
-current unix timestamp w/o ms
-
-**Kind**: global function  
-<a name="userAgent"></a>
-
-## userAgent(uuid) ⇒ <code>string</code>
-
-Creates a useragent string used by the android app
-
-**Kind**: global function  
-**Returns**: <code>string</code> - useragent string
-
-| Param | Type                | Description |
-| ----- | ------------------- | ----------- |
-| uuid  | <code>string</code> | UUID        |
-
-<a name="token"></a>
-
-## token(uuid) ⇒ <code>string</code>
-
-AES encrypted wdToken header - Chinese telemetry =)
-
-**Kind**: global function  
-**Returns**: <code>string</code> - wdToken
-
-| Param | Type                | Description |
-| ----- | ------------------- | ----------- |
-| uuid  | <code>string</code> | UUID        |
-
-## Chapter encryption
-
-**TODO:** implement in the lib
-
-```sh
-curl -X GET \
-  'https://idruid.webnovel.com/app/api/book/get-chapter?bookId=11721981606490105&chapterId=34602770786999615' \
-  -H 'User-Agent: Mozilla/mobile QDHWReaderAndroid/3.8.2/183/2000002/000000008fd8e514000000008fd8e514' \
-  -H 'wdToken: zFo1gTRxWzzRKLDiZZNgY1hYtafhSAlbubfBjp02ySim784MVkCGM6iz2bXJDW6+QWUjbRjZ19TAhZYFfHO6H1uSeDLgnnLQKV6cZs76xTcSFcWQiiebaLDG9/zIeQUOTxJCqSAXPjLOiuKdWqzpKA=='
-```
-
-`res['Data']['ContentItems']` returns an encrypted string, [decrypter/Main.kt](/decrypter/Main.kt) has a decrpytion example based on `libload-jni.so`.
-
-```java
-byte[] b = C0000b.m0b(j, j2, bArr, QDUserManager.getInstance().mo36470a(), AppInfo.m9267a().mo21343p());
-// b bookId chapterId content userId (jwguid) IMEI (UUID)
-
-// b :: long -> long -> byte[] -> long -> String -> byte[]
-public static native byte[] a.b.b(long j, long j2, byte[] bArr, long j3, String str);
-```
+<a name="SessionInfo"></a>
+
+## SessionInfo : <code>Object</code>
+
+Auth methods session info
+
+**Kind**: global typedef  
+**Properties**
+
+| Name                      | Type                | Description                                           |
+| ------------------------- | ------------------- | ----------------------------------------------------- |
+| code                      | <code>number</code> | status code.                                          |
+| data                      | <code>Object</code> | Session data                                          |
+| data.ticket               | <code>string</code> | Session validation ticket                             |
+| data.ukey                 | <code>string</code> | Currently logged in user's key (used in jwkey cookie) |
+| data.autoLoginFlag        | <code>number</code> | Whether we logged in with an autologin flag           |
+| data.autoLoginSessionKey  | <code>string</code> | AL session key                                        |
+| data.autoLoginKeepTime    | <code>number</code> | AL session lifetime                                   |
+| data.autoLoginExpiredTime | <code>number</code> | expiration unix timestamp                             |
+| data.userid               | <code>number</code> | user ID                                               |
+| msg                       | <code>string</code> | ok.                                                   |
 
 ### Web login
 

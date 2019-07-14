@@ -1,12 +1,12 @@
 const { Client: WNClient } = require("../index");
 
 (async () => {
-  const email = "some@mail.com";
+  const username = "wijo@4easyemail.com";
 
   const client = new WNClient({
-    username: email,
-    password: "supersekret",
-    uuid: "000000003ede1bf9000000003ede1bf9" // UUID
+    username,
+    password: "UT6bp8X3Nee6XwJGYC",
+    uuid: "000000003ede1bf9000000003ede1bf9"
   });
 
   const res = await client.login(true);
@@ -37,7 +37,7 @@ const { Client: WNClient } = require("../index");
     }
   } = await client.apiClient("/user/get");
 
-  console.log(Email === email); // true
+  console.log(Email === username); // true
 
   // Ze Tian Ji 😍
   const bookId = "8205217405006105";
