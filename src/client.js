@@ -321,7 +321,7 @@ class Client {
       decryptChapter(
         String(chapterId),
         body.Data.ContentItems,
-        String(this.ctx.auth.id),
+        String(this.ctx.session.id),
         this.ctx.uuid
       )
     ).ContentItems;
