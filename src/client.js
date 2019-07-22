@@ -286,7 +286,7 @@ class Client {
       throw new AuthError("Session expired.");
     }
 
-    const { body } = this.authClient("/checkstatus", {
+    const { body } = await this.authClient("/checkstatus", {
       body: {
         ...defaults.login,
         signature: sign.payload(this.ctx.uuid),
