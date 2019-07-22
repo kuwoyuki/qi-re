@@ -74,8 +74,6 @@ class Client {
     }
 
     this.ctx.domain = getPublicSuffix(url.parse(this.ctx.apiURL).hostname);
-    console.log(this.ctx.domain);
-
     this.setCookie = promisify(
       this.ctx.cookieJar.setCookie.bind(this.ctx.cookieJar)
     );
@@ -281,7 +279,7 @@ class Client {
    */
   async resumeSession() {
     const {
-      auth: { id, key, autoLoginKey, autoLoginExpires }
+      session: { id, key, autoLoginKey, autoLoginExpires }
     } = this.ctx;
 
     if (autoLoginExpires - ((Date.now() / 1000) | 0) < 0) {
