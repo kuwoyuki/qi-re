@@ -296,6 +296,8 @@ class Client {
       }
     });
 
+    this.setCookies(body.data);
+
     return body;
   }
 
