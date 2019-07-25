@@ -67,8 +67,10 @@ class Client {
     };
 
     if (!uuid) {
-      const x = BigInt(Math.floor(1e9 + Math.random() * 21e8)) * -1;
-      const y = BigInt(Math.floor(1e9 + Math.random() * 21e8));
+      const x =
+        BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8))) *
+        BigInt(-1);
+      const y = BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8)));
 
       this.ctx.uuid = new UUID(x, y);
     }
