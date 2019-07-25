@@ -154,6 +154,57 @@ class Client {
   }
 
   /**
+   * @typedef {Object} RegisterPayload
+   * @property {number} code - status code
+   * @property {Object} data - data payload
+   * @property {string} email - email used for the registration
+   * @property {string} emailkey - email confirmation code
+   * @property {string} msg - status message
+   */
+
+  /**
+   * Register an account, gets credentials from Client context
+   *
+   * @memberof Client
+   * @returns {RegisterPayload}
+   */
+  async register() {
+    const {
+      ctx: { credentials, uuid }
+    } = this;
+
+    return this.authClient.post("/doregister", {
+      body: {
+        signature: sign.payload(uuid),
+        ...defaults.login,
+        nextAction: "0",
+        type: "1",
+        account: credentials.username,
+        password: credentials.password
+      }
+    });
+  }
+
+  /**
+   * Confirm registration and get session creds
+   *
+   * @param {string} emailkey
+   * @param {string} code
+   * @returns {Promise<SessionInfo>}
+   * @memberof Client
+   */
+  confirmRegistration(emailkey, code) {
+    return this.authClient("/confirm", {
+      body: {
+        ...defaults.login,
+        signature: sign.payload(this.ctx.uuid),
+        emailkey,
+        code
+      }
+    });
+  }
+
+  /**
    * Send a verification email
    *
    * @private
