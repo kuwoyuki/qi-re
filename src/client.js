@@ -67,7 +67,7 @@ class Client {
     };
 
     if (!uuid) {
-      this.ctx.uuid = new UUID();
+      this.ctx.uuid = new UUID().toString("");
     }
 
     this.ctx.domain = getPublicSuffix(url.parse(this.ctx.apiURL).hostname);
