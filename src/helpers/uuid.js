@@ -5,6 +5,10 @@ function digits(val, d) {
   return (hi | (val & (hi - BigInt(1)))).toString(16).substring(1);
 }
 
+function randomBits() {
+  return BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8)));
+}
+
 /**
  * UUID builder from (MSB, LSB) values like Java's
  *
@@ -12,8 +16,8 @@ function digits(val, d) {
  */
 class UUID {
   constructor(mostSigBits, leastSigBits) {
-    this.mostSigBits = mostSigBits;
-    this.leastSigBits = leastSigBits;
+    this.mostSigBits = mostSigBits || randomBits();
+    this.leastSigBits = leastSigBits || randomBits();
   }
 
   /**
