@@ -6,7 +6,7 @@ function digits(val, d) {
 }
 
 function randomBits() {
-  return BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8)));
+  return BigInt(Math.floor(1e9 + Math.random() * 21e8));
 }
 
 /**
