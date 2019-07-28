@@ -67,12 +67,7 @@ class Client {
     };
 
     if (!uuid) {
-      const x =
-        BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8))) *
-        BigInt(-1);
-      const y = BigInt(Math.floor(BigInt(1e9) + Math.random() * BigInt(21e8)));
-
-      this.ctx.uuid = new UUID(x, y);
+      this.ctx.uuid = new UUID();
     }
 
     this.ctx.domain = getPublicSuffix(url.parse(this.ctx.apiURL).hostname);
