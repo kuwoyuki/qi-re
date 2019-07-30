@@ -163,7 +163,7 @@ class Client {
    * Register an account, gets credentials from Client context
    *
    * @memberof Client
-   * @returns {RegisterPayload}
+   * @returns {Promise<RegisterPayload>}
    */
   async register() {
     const {

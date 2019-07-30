@@ -92,6 +92,7 @@ The client class only implements complex/encrypted/signed requests, so for the m
 Most API endpoints are declared in the `com.qidian.QDReader.components.api` package, in the `Urls` class.
 
 Maybe have a look at [examples](/examples) too.
+
 ## Classes
 
 <dl>
@@ -123,7 +124,7 @@ Webnovel client, instantiate, login then call the API endpoints using `this.apiC
         * [.ctx](#Client+ctx)
         * [.authClient](#Client+authClient) : <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
         * [.apiClient](#Client+apiClient) : <code>got.GotInstance.&lt;got.GotJSONFn&gt;</code>
-        * [.register()](#Client+register) ⇒ [<code>RegisterPayload</code>](#RegisterPayload)
+        * [.register()](#Client+register) ⇒ [<code>Promise.&lt;RegisterPayload&gt;</code>](#RegisterPayload)
         * [.confirmRegistration(emailkey, code)](#Client+confirmRegistration) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
         * [.confirmCode(encry, code)](#Client+confirmCode) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
         * [.login(emailVer)](#Client+login) ⇒ [<code>Promise.&lt;SessionInfo&gt;</code>](#SessionInfo)
@@ -173,7 +174,7 @@ Got API (idroid) client instance
 **Access**: public
 <a name="Client+register"></a>
 
-### client.register() ⇒ [<code>RegisterPayload</code>](#RegisterPayload)
+### client.register() ⇒ [<code>Promise.&lt;RegisterPayload&gt;</code>](#RegisterPayload)
 Register an account, gets credentials from Client context
 
 **Kind**: instance method of [<code>Client</code>](#Client)
